@@ -14,8 +14,12 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 	qtype := state.Type()
 
 	zone := plugin.Zones(threebot.Zones).Matches(qname)
-	location := threebot.findLocation(qname, zone)
 
+	if zone == "" {
+		return errorResponse(state, zone, dns.RcodeBadName, nil)
+
+	}
+	location := threebot.findLocation(qname, zone)
 	answers := make([]dns.RR, 0, 10)
 	extras := make([]dns.RR, 0, 10)
 
