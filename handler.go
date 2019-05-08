@@ -21,7 +21,7 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 
 	record, err := threebot.get(location)
 	if err != nil {
-		return threebot.errorResponse(state, zone, dns.RcodeBadName, nil)
+		return errorResponse(state, zone, dns.RcodeBadName, nil)
 	}
 
 	switch qtype {
@@ -33,7 +33,7 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 		answers, extras = threebot.CNAME(qname, "", record)
 
 	default:
-		return threebot.errorResponse(state, zone, dns.RcodeNotImplemented, nil)
+		return errorResponse(state, zone, dns.RcodeNotImplemented, nil)
 	}
 
 
@@ -51,7 +51,7 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 // Name implements the Handler interface.
 func (threebot *Threebot) Name() string { return "threebot" }
 
-func (threebot *Threebot) errorResponse(state request.Request, zone string, rcode int, err error) (int, error) {
+func errorResponse(state request.Request, zone string, rcode int, err error) (int, error) {
 	m := new(dns.Msg)
 	m.SetRcode(state.Req, rcode)
 	m.Authoritative, m.RecursionAvailable, m.Compress = true, false, true

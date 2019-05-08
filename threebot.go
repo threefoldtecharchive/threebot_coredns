@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/coredns/coredns/plugin"
 	"github.com/miekg/dns"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -131,18 +130,17 @@ func (threebot *Threebot) get(key string) (*Record, error) {
 	// whoever responds is enough
 	for _, explorer := range threebot.Explorers {
 		whoisUrl := explorer+"/explorer/whois/3bot/"+key
-		resp, _ := http.Get(whoisUrl)
-		if resp.StatusCode==200{
-			body, error := ioutil.ReadAll(resp.Body)
-			if error != nil {
-				return nil, error
-			}
-			whoisResp := new(WhoIsResponse)
-			error = json.Unmarshal([]byte(body),&whoisResp)
-			if error != nil {
-				return nil, error
-			}
+		resp, error := http.Get(whoisUrl)
+		defer resp.Body.Close()
 
+		if error != nil {
+			return nil, error
+		}
+		if resp.StatusCode==200{
+			whoisResp := new(WhoIsResponse)
+			if err := json.NewDecoder(resp.Body).Decode(whoisResp); err != nil {
+				continue
+			}
 			// TODO: handle multiple records and agree on standard return of IPv4 for locations where 3bots are running on.
 			rec := new(Record)
 			for _, addr := range(whoisResp.Addresses) {
@@ -156,7 +154,6 @@ func (threebot *Threebot) get(key string) (*Record, error) {
 				}
 				return rec, nil
 			}
-
 		}
 	}
 	return nil, fmt.Errorf("couldn't get record for 3bot with key ", key)
