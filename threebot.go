@@ -8,7 +8,16 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"github.com/patrickmn/go-cache"
+	"time"
 )
+
+
+var threebotCache *cache.Cache
+
+func init(){
+	threebotCache = cache.New(5*time.Minute, 10*time.Minute)
+}
 
 type Threebot struct {
 	Next           plugin.Handler
@@ -16,6 +25,7 @@ type Threebot struct {
 	Zones          []string
 	Explorers	   []string
 }
+
 
 type Zone struct {
 	Name      string
@@ -155,6 +165,10 @@ func (threebot *Threebot) get(key string) (*Record, error) {
 
 	// whoever responds is enough
 	var rec *Record
+	if res, found := threebotCache.Get(key) ; found {
+		return res.(*Record), nil
+	}
+
 	for _, explorer := range threebot.Explorers {
 		whoisUrl := explorer+"/explorer/whois/3bot/"+key
 		resp, error := http.Get(whoisUrl)
@@ -172,6 +186,7 @@ func (threebot *Threebot) get(key string) (*Record, error) {
 			if error != nil {
 				continue 	// try the next explorer.
 			}
+			threebotCache.Set(key, rec, time.Second*time.Duration(threebot.Ttl))
 			return rec, nil
 		}
 	}
