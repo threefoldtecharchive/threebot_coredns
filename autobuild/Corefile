@@ -1,0 +1,5 @@
+. {
+    threebot grid.tf. {
+        explorer "https://explorer.threefoldtoken.com"
+    }
+}
