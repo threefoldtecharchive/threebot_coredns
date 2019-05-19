@@ -2,11 +2,11 @@
 set -ex
 
 apt-get update
-apt-get install git gcc wget -y
+apt-get install git gcc make wget -y
 
 # make output directory
 ARCHIVE=/tmp/archives
-THREEBOT_FLIST=/tmp/threebot_coredns
+THREEBOT_FLIST=/tmp/threebot_coredns_flist_dir
 
 
 mkdir -p $ARCHIVE
@@ -21,27 +21,27 @@ export GOPATH=/root/go
 export PATH=$PATH:/usr/local/go/bin:$GOPATH/go/bin
 
 
-pushd /tmp
-git clone https://github.com/coredns/coredns
-cd coredns
+git clone https://github.com/coredns/coredns /tmp/coredns
 
-echo 'threebot:github.com/threefoldtech/threebot_coredns' >> plugin.cfg
-make
+pushd /tmp/coredns
+    echo 'threebot:github.com/threefoldtech/threebot_coredns' >> plugin.cfg
+    make
+    chmod +x coredns
 
-chmod +x coredns
+    cp coredns $THREEBOT_FLIST/bin/
 
-cp coredns $THREEBOT_FLIST/bin/
+
+
+popd
+
+
+git clone https://github.com/threefoldtech/threebot_coredns /tmp/threebot_coredns
+pushd /tmp/threebot_coredns
+    cp autobuild/Corefile $THREEBOT_FLIST/
+    cp autobuild/startup.toml $THREEBOT_FLIST/.startup.toml
+popd
 
 # make sure binary is executable
 chmod +x $THREEBOT_FLIST/bin/*
-
-popd
-
-pushd 
-git clone https://github.com/threefoldtech/threebot_coredns
-cd threebot_coredns/autobuild/
-cp Corefile $THREEBOT_FLIST/
-cp startup.toml $THREEBOT_FLIST/.startup.toml
-popd
 
 tar -czf "/tmp/archives/threebot_coredns.tar.gz" -C $THREEBOT_FLIST .
