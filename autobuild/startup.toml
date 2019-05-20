@@ -4,4 +4,4 @@ protected = true
 
 [startup.coredns.args]
 name = "/bin/coredns"
-args = ["-conf", "/Corefile"]
+args = ["-conf", "/Corefile", "-dns.port", "{COREDNS_PORT}"]
