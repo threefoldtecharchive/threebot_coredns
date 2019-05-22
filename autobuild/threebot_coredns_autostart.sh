@@ -44,4 +44,8 @@ popd
 # make sure binary is executable
 chmod +x $THREEBOT_FLIST/bin/*
 
+
+# copy /etc/ssl too 
+cp /etc/ssl -R $THREEBOT_FLIST
+
 tar -czf "/tmp/archives/threebot_coredns.tar.gz" -C $THREEBOT_FLIST .
