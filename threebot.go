@@ -36,6 +36,7 @@ type Record struct {
 	A     []A_Record `json:"a,omitempty"`
 	AAAA  []AAAA_Record `json:"aaaa,omitempty"`
 	CNAME []CNAME_Record `json:"cname,omitempty"`
+	CAA   []CAA_Record `json:"caa,omitempty"`
 
 }
 
@@ -47,6 +48,16 @@ type A_Record struct {
 type AAAA_Record struct {
 	Ttl uint32 `json:"ttl,omitempty"`
 	Ip  net.IP `json:"ip"`
+}
+
+
+type CAA_Record struct {
+	Name string `json:"name"`
+	Flag uint8 `json:"flag"` // 0
+	Tag  string `json:"tag"` //issue/issuewild//iodef
+	Value string `json:"value"`
+	Ttl uint32 `json:"ttl,omitempty"`
+
 }
 
 type CNAME_Record struct {
@@ -81,6 +92,17 @@ func (threebot Threebot) AAAA(name, z string,  record *Record) (answers, extras 
 	}
 	return
 }
+
+
+
+func (threebot Threebot) CAA(name, z string,  record *Record) (answers, extras []dns.RR) {
+	for _, caa := range record.CAA {
+		r := &dns.CAA{Hdr: dns.RR_Header{Name: name, Rrtype: dns.TypeCAA, Class: dns.ClassINET, Ttl: caa.Ttl}, Value: caa.Value, Tag: caa.Tag, Flag: caa.Flag}
+		answers = append(answers, r)
+	}
+	return
+}
+
 
 func (threebot *Threebot) CNAME(name, z string,  record *Record) (answers, extras []dns.RR) {
 	for _, cname := range record.CNAME {
@@ -131,10 +153,21 @@ type ThreeBotRecord struct {
 type WhoIsResponse struct{
 	ThreeBotRecord `json:"record"`
 }
+func getLetsEncryptCAA(name string) CAA_Record {
+	rec := CAA_Record{
+		Tag: "issue",
+		Value: "letsencrypt.org",
+		Flag: 0,
+		Name: name,
+
+	}
+	return rec
+}
 func recordsFromWhoIsResponse(whoisResp *WhoIsResponse)(*Record, error){
 	rec := new(Record)
 	rec.A = []A_Record{}
 	rec.AAAA = []AAAA_Record{}
+	rec.CAA = []CAA_Record{}
 	for _, addr := range(whoisResp.Addresses) {
 
 		theIp := net.ParseIP(addr)
@@ -183,6 +216,7 @@ func (threebot *Threebot) get(key string) (*Record, error) {
 				continue
 			}
 			rec, error = recordsFromWhoIsResponse(whoisResp)
+			rec.CAA = append(rec.CAA, getLetsEncryptCAA(threebot.Zones[0]+key))
 			if error != nil {
 				continue 	// try the next explorer.
 			}

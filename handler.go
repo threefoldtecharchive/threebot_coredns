@@ -37,7 +37,8 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 		answers, extras = threebot.AAAA(qname, "", record)
 	case "CNAME":
 		answers, extras = threebot.CNAME(qname, "", record)
-
+	case "CAA":
+		answers, extras = threebot.CAA(qname, "", record)
 	default:
 		return errorResponse(state, zone, dns.RcodeNotImplemented, nil)
 	}
