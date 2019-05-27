@@ -2,6 +2,7 @@ package threebot
 
 import (
 	"context"
+
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
@@ -25,7 +26,8 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 
 	record, err := threebot.get(location)
 	if err != nil {
-		return errorResponse(state, zone, dns.RcodeBadName, nil)
+		return threebot.Next.ServeDNS(ctx, w, r)
+		//return errorResponse(state, zone, dns.RcodeBadName, nil)
 	}
 
 	switch qtype {
@@ -35,11 +37,11 @@ func (threebot *Threebot) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 		answers, extras = threebot.AAAA(qname, "", record)
 	case "CNAME":
 		answers, extras = threebot.CNAME(qname, "", record)
-
+	case "CAA":
+		answers, extras = threebot.CAA(qname, "", record)
 	default:
 		return errorResponse(state, zone, dns.RcodeNotImplemented, nil)
 	}
-
 
 	m := new(dns.Msg)
 	m.SetReply(r)
@@ -59,7 +61,6 @@ func errorResponse(state request.Request, zone string, rcode int, err error) (in
 	m := new(dns.Msg)
 	m.SetRcode(state.Req, rcode)
 	m.Authoritative, m.RecursionAvailable, m.Compress = true, false, true
-
 
 	state.SizeAndDo(m)
 	state.W.WriteMsg(m)

@@ -2,4 +2,6 @@
     threebot grid.tf. {
         explorer "https://explorer.threefoldtoken.com"
     }
+    forward 8.8.8.8 9.9.9.9 
+
 }

@@ -38,6 +38,11 @@ pushd /tmp/threebot_coredns
     cp autobuild/Corefile $THREEBOT_FLIST/
 popd
 
+
+# copy /etc/ssl too 
+cp /etc/ssl -R $THREEBOT_FLIST
+
+
 # make sure binary is executable
 chmod +x $THREEBOT_FLIST/bin/*
 
